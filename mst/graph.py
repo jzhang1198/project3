@@ -1,5 +1,5 @@
 import numpy as np
-import heapq
+#import heapq
 from typing import Union
 
 class Graph:
@@ -35,4 +35,32 @@ class Graph:
         We highly encourage the use of priority queues in your implementation. See the heapq
         module, particularly the `heapify`, `heappop`, and `heappush` functions.
         """
-        self.mst = 'TODO'
+        
+        adjacency_mat = self.adj_mat
+        no_nodes = len(adjacency_mat) #compute the total number of nodes
+        mst = np.zeros((no_nodes,no_nodes)) #generate an empty matrix to become mst
+        nodes = list([int(x) for x in np.linspace(0,no_nodes-1,no_nodes)]) #list all nodes
+        V = set(nodes) #create a set of all vertices
+        section = set([nodes[0]]) #initialize section 
+        
+        while section != V:
+            edge_weights = [] #generate empty vectors to hold edge weights and edges for all edges connecting section with V-section 
+            edges = []
+            for node1 in section: #loop through all nodes in section and check if they connect with V-section
+                for node2 in set([node for node in V if node not in section]):
+                    if adjacency_mat[node1,node2] != 0:
+                        edge_weights.append(adjacency_mat[node1,node2]) #if the nodes are connected, append edge and edge_weight
+                        edges.append((node1,node2))
+        
+            local_min = min(edge_weights) #find the shortest edge between section and V-section and the nodes forming this edge
+            v1,v2 = edges[edge_weights.index(local_min)] 
+            mst[v1,v2] = local_min #update mst
+            mst[v2,v1] = local_min
+            section.add(v2) #update section set
+        
+        
+        
+        
+        self.mst = mst
+        
+
