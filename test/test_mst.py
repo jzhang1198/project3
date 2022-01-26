@@ -32,7 +32,26 @@ def check_mst(adj_mat: np.ndarray,
         for j in range(i+1):
             total += mst[i, j]
     assert approx_equal(total, expected_weight), 'Proposed MST has incorrect expected weight'
-
+    
+    no_nodes = len(adj_mat)
+    no_edges = np.count_nonzero(mst) / 2 #count the number of nonzero elements in mst. since this quantity represents twice the number of edges, dividing it by two will yield the number of edges in the mst
+    assert no_edges == no_nodes - 1 #a mst will contain n-1 edges, where n is the number of nodes.
+    
+    rows,columns = np.nonzero(mst) #convert the adjacency matrix of the mst to that of an unweighted graph with the same connectivity 
+    unweighted = mst
+    for ind in range(0,len(rows)):
+        r = rows[ind]
+        c = columns[ind]
+        unweighted[r,c] = 1
+    D = np.zeros((no_nodes,no_nodes)) #compute degree matrix corresponding to the MST
+    for node in range(0,no_nodes):
+        D[node,node] = np.count_nonzero(unweighted[:,node]) 
+        
+    laplacian = D - unweighted #compute the laplacian matrix corresponding to the unweighted MST
+    eigs = np.sort(np.linalg.eig(laplacian)[0])[::-1]
+    fiedler = eigs[-2] #if the MST is connected, the second smallest eigenvalue of its laplacian will be nonzero. https://en.wikipedia.org/wiki/Algebraic_connectivity
+    assert fiedler > 0
+    
 
 def test_mst_small():
     """ Unit test for the construction of a minimum spanning tree on a small graph """
@@ -59,4 +78,18 @@ def test_mst_single_cell_data():
 
 def test_mst_student():
     """ TODO: Write at least one unit test for MST construction """
-    pass
+    
+    #dummy network to test this 
+    file_path = './data/dummy.csv' #path to a connected graph of three nodes
+    g = Graph(file_path)
+    g.construct_mst()
+    
+    shape = np.shape(g.mst)
+    
+    assert shape == (3,3) #ensure that the mst adjacency matrix is square
+    
+    for row_ind in range(0,shape[0]):
+        for column_ind in range(0,shape[1]):
+            assert g.mst[row_ind,column_ind] == g.mst[column_ind,row_ind] #check that the mst adjacency matrix is symmetric
+    
+    
